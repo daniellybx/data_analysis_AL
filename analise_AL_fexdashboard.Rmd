@@ -1,0 +1,78 @@
+---
+title: "Covid-19 na América Latina"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+setwd('C:/Users/danie/OneDrive/Documentos/ProEpi/Covid_19_AL/dados_OMS')
+dados_OMS = read.csv('20200524_OMS_globaldata.csv', stringsAsFactors = F)
+dados_AML = subset(dados_OMS, dados_OMS$Country == "Argentina"|
+                     dados_OMS$Country == "Bolivia (Plurinational State of)"|
+                     dados_OMS$Country == "Brazil"|
+                     dados_OMS$Country == "Chile"|
+                     dados_OMS$Country == "Colombia"|
+                     dados_OMS$Country == "Costa Rica"|
+                     dados_OMS$Country == "Cuba"|
+                     dados_OMS$Country == "El Salvador"|
+                     dados_OMS$Country == "Ecuador"|
+                     dados_OMS$Country == "Guatemala"|
+                     dados_OMS$Country == "Haiti"|
+                     dados_OMS$Country == "Honduras" |
+                     dados_OMS$Country == "Mexico"|
+                     dados_OMS$Country == "Nicaragua"|
+                     dados_OMS$Country == "Panama" |
+                     dados_OMS$Country == "Paraguay" |
+                     dados_OMS$Country == "Peru" |
+                     dados_OMS$Country == "Dominican Republic" |
+                     dados_OMS$Country == "Uruguay" |
+                     dados_OMS$Country == "Venezuela (Bolivarian Republic of)")
+```
+
+Row {data-width=250}
+-----------------------------------------------------------------------
+
+### Número de casos na América Latina (Até 24 de maio de 2020)
+
+``` {r echo = F} 
+library(flexdashboard)
+casos = sum(dados_AML$New_cases)
+valueBox(casos, icon = "fa-user-friends", color = '#3236a8')
+```
+
+Row {data-width=250}
+-----------------------------------------------------------------------
+### Óbitos na América Latina (Até 24 de maio de 2020)
+
+``` {r echo = F} 
+
+obitos = sum(dados_AML$New_deaths)
+valueBox(obitos, icon = "fa-clock", color = '#a83e32')
+```
+
+Row {data-width=250}
+-----------------------------------------------------------------------
+### Letalidade na América Latina (Até 24 de maio de 2020)
+
+``` {r echo = F} 
+letalidade = paste0(round(obitos/casos*100, 2), "%")
+valueBox(letalidade,icon = "fa-exclamation", color = '#db1620')
+```
+
+Row
+-------------------------------------
+    
+### 
+    
+```{r}
+```
+    
+### Chart 3
+
+```{r}
+```
+
+
