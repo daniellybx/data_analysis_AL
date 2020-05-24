@@ -1,9 +1,9 @@
 ---
 title: "Covid-19 na América Latina"
 output: 
-  flexdashboard::flex_dashboard:
-    orientation: columns
-    vertical_layout: fill
+    flexdashboard::flex_dashboard:
+    orientation: rows
+  
 ---
 
 ```{r setup, include=FALSE}
@@ -30,49 +30,79 @@ dados_AML = subset(dados_OMS, dados_OMS$Country == "Argentina"|
                      dados_OMS$Country == "Dominican Republic" |
                      dados_OMS$Country == "Uruguay" |
                      dados_OMS$Country == "Venezuela (Bolivarian Republic of)")
+
+pop = data.frame( cbind(c("Argentina", "Bolivia (Plurinational State of)", "Brazil", 
+                          "Chile", "Colombia", "Costa Rica", "Cuba", "El Salvador",
+                    "Ecuador", "Guatemala", "Haiti", "Honduras", "Mexico", "Nicaragua",
+                    "Panama", "Paraguay", "Peru", "Dominican Republic", "Uruguay",
+                 "Venezuela (Bolivarian Republic of)"),
+                 c(43590368 , 10969049, 210147125, 
+                    18050000, 48747632, 4868148, 11221060,
+                    6344722, 16385068, 17263239, 9996731, 9587522, 123675325, 6167237,
+                    4034119, 7152703, 33105273, 10630000, 3351016, 31703499)))
+colnames(pop) = c("Country", "Pop")
+
+dados_AML = merge(dados_AML, pop, by = "Country")
+dados_AML$day = substring(dados_AML$`ï..Date_reported`, 1, 10)
+dados_AML$day = as.Date(dados_AML$day)
+dados_AML$New_cases = ifelse(dados_AML$New_cases < 0, 0, dados_AML$New_cases)
 ```
 
-Row {data-width=250}
------------------------------------------------------------------------
-
+Column 
+-------------------------------------
+    
 ### Número de casos na América Latina (Até 24 de maio de 2020)
-
-``` {r echo = F} 
+    
+```{r}
 library(flexdashboard)
 casos = sum(dados_AML$New_cases)
 valueBox(casos, icon = "fa-user-friends", color = '#3236a8')
 ```
-
-Row {data-width=250}
------------------------------------------------------------------------
+ 
 ### Óbitos na América Latina (Até 24 de maio de 2020)
-
-``` {r echo = F} 
-
+    
+```{r}
 obitos = sum(dados_AML$New_deaths)
 valueBox(obitos, icon = "fa-clock", color = '#a83e32')
-```
-
-Row {data-width=250}
------------------------------------------------------------------------
+``` 
+ 
 ### Letalidade na América Latina (Até 24 de maio de 2020)
-
-``` {r echo = F} 
+    
+```{r}
 letalidade = paste0(round(obitos/casos*100, 2), "%")
 valueBox(letalidade,icon = "fa-exclamation", color = '#db1620')
-```
+``` 
 
-Row
+Row {data-height=350}
 -------------------------------------
     
-### 
+### Incidência na América Latina
     
 ```{r}
+library(ggplot2)
+library(scales)
+
+#histograma de casos 
+casos = ggplot(dados_AML, aes(day, New_cases))
+casos+ 
+  geom_bar(stat="identity", fill = '#70a0be')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ggtitle('Número de casos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020')+
+  ylab("Casos") + xlab("Dia") +
+  theme_bw() 
 ```
     
-### Chart 3
+### Óbitos na América Latina
 
 ```{r}
+#histograma de Óbitos
+obitos = ggplot(dados_AML, aes(day, New_deaths))
+obitos+ 
+  geom_bar(stat="identity", fill = '#f6968d')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ggtitle('Número de óbitos por Covid-19 por dia, América Latina, 24 de maio de 2020')+
+  ylab("óbitos") + xlab("Dia") +
+  theme_bw()
 ```
 
 
