@@ -48,9 +48,8 @@ dados_AML$day = as.Date(dados_AML$day)
 dados_AML$New_cases = ifelse(dados_AML$New_cases < 0, 0, dados_AML$New_cases)
 ```
 
-Column 
+Row 
 -------------------------------------
-    
 ### Número de casos na América Latina (Até 24 de maio de 2020)
     
 ```{r}
@@ -73,9 +72,8 @@ letalidade = paste0(round(obitos/casos*100, 2), "%")
 valueBox(letalidade,icon = "fa-exclamation", color = '#db1620')
 ``` 
 
-Row {data-height=350}
+Row 
 -------------------------------------
-    
 ### Incidência na América Latina
     
 ```{r}
@@ -105,4 +103,7 @@ obitos+
   theme_bw()
 ```
 
+Row 
+-------------------------------------
+### 
 
