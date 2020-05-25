@@ -6,7 +6,7 @@ output:
   
 ---
 
-```{r setup, include=FALSE}
+```{r, DADOS, setup, include=FALSE}
 library(flexdashboard)
 setwd('C:/Users/danie/OneDrive/Documentos/ProEpi/Covid_19_AL/dados_OMS')
 dados_OMS = read.csv('20200524_OMS_globaldata.csv', stringsAsFactors = F)
@@ -46,64 +46,81 @@ dados_AML = merge(dados_AML, pop, by = "Country")
 dados_AML$day = substring(dados_AML$`ï..Date_reported`, 1, 10)
 dados_AML$day = as.Date(dados_AML$day)
 dados_AML$New_cases = ifelse(dados_AML$New_cases < 0, 0, dados_AML$New_cases)
+dados_AML$tx_inc = round(as.double(dados_AML$Cumulative_cases)/as.double(dados_AML$Pop)*100000, 2)
+dados_AML$tx_obt = round(as.double(dados_AML$Cumulative_deaths)/as.double(dados_AML$Pop)*100000, 2)
 ```
 
 Row 
 -------------------------------------
 ### Número de casos na América Latina (Até 24 de maio de 2020)
     
-```{r}
+```{r, CASOS}
 library(flexdashboard)
 casos = sum(dados_AML$New_cases)
 valueBox(casos, icon = "fa-user-friends", color = '#3236a8')
 ```
  
+
 ### Óbitos na América Latina (Até 24 de maio de 2020)
     
-```{r}
+```{r, OBITOS}
 obitos = sum(dados_AML$New_deaths)
 valueBox(obitos, icon = "fa-clock", color = '#a83e32')
 ``` 
  
+
 ### Letalidade na América Latina (Até 24 de maio de 2020)
     
-```{r}
+```{r, LETALIDADE}
 letalidade = paste0(round(obitos/casos*100, 2), "%")
 valueBox(letalidade,icon = "fa-exclamation", color = '#db1620')
 ``` 
+
 
 Row 
 -------------------------------------
 ### Incidência na América Latina
     
-```{r}
+```{r, CASOS_GRA}
 library(ggplot2)
 library(scales)
 
 #histograma de casos 
 casos = ggplot(dados_AML, aes(day, New_cases))
 casos+ 
-  geom_bar(stat="identity", fill = '#70a0be')+
+  geom_bar(stat="identity", fill = '#3434eb')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
   ggtitle('Número de casos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020')+
   ylab("Casos") + xlab("Dia") +
   theme_bw() 
 ```
     
+
 ### Óbitos na América Latina
 
-```{r}
+```{r, OBITOS_GRA}
 #histograma de Óbitos
 obitos = ggplot(dados_AML, aes(day, New_deaths))
 obitos+ 
-  geom_bar(stat="identity", fill = '#f6968d')+
+  geom_bar(stat="identity", fill = '#f70a0a')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
-  ggtitle('Número de óbitos por Covid-19 por dia, América Latina, 24 de maio de 2020')+
-  ylab("óbitos") + xlab("Dia") +
-  theme_bw()
+  ggtitle('Número de óbitos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020')+
+  ylab("Casos") + xlab("Dia") +
+  theme_bw() 
 ```
+
 
 Row 
 -------------------------------------
-### 
+### Taxa de incidência na América Latina 
 
+```{r, TX_INC}
+#histograma de Óbitos
+tx_inc = ggplot(dados_AML, aes(day, tx_inc))
+tx_inc+
+  geom_line(color = '#28b4c9', size = 1.5)+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ggtitle('Taxa de incidência acumulada por Covid-19, América Latina, 24 de maio de 2020')+
+  ylab("Taxa de incidência") + xlab("Dia") +
+  theme_bw()
+```
