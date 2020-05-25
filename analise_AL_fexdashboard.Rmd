@@ -42,12 +42,7 @@ pop = data.frame( cbind(c("Argentina", "Bolivia (Plurinational State of)", "Braz
                     4034119, 7152703, 33105273, 10630000, 3351016, 31703499)))
 colnames(pop) = c("Country", "Pop")
 
-dados_AML = merge(dados_AML, pop, by = "Country")
-dados_AML$day = substring(dados_AML$`ï..Date_reported`, 1, 10)
-dados_AML$day = as.Date(dados_AML$day)
-dados_AML$New_cases = ifelse(dados_AML$New_cases < 0, 0, dados_AML$New_cases)
-dados_AML$tx_inc = round(as.double(dados_AML$Cumulative_cases)/as.double(dados_AML$Pop)*100000, 2)
-dados_AML$tx_obt = round(as.double(dados_AML$Cumulative_deaths)/as.double(dados_AML$Pop)*100000, 2)
+
 ```
 
 Row 
@@ -115,7 +110,7 @@ Row
 ### Taxa de incidência na América Latina 
 
 ```{r, TX_INC}
-#histograma de Óbitos
+#gráfico de linhas da taxa de incidência
 tx_inc = ggplot(dados_AML, aes(day, tx_inc))
 tx_inc+
   geom_line(color = '#28b4c9', size = 1.5)+
