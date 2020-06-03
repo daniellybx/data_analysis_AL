@@ -81,10 +81,10 @@ valueBox(letalidade,icon = "fa-exclamation", color = '#db1620')
 
 
 
-Row{data-height=250}
+Row{data-height=full}
 -------------------------------------
 
-### Incidência na América Latina
+### Número de casos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020
 ```{r, CASOS_GRA}
 library(ggplot2)
 library(scales)
@@ -94,20 +94,18 @@ casos = ggplot(dados_AML, aes(day, New_cases))
 casos+ 
   geom_bar(stat="identity", fill = '#3434eb')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
-  ggtitle('Número de casos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020')+
   ylab("Casos") + xlab("Dia")+
 theme(axis.text.x = element_text(size=8, angle=90),
           axis.text.y = element_text(size=10, angle=0))
 ```
 
-### Óbitos na América Latina
+### Número de óbitos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020
 ```{r, OBITOS_GRA}
 #histograma de Óbitos
 obitos = ggplot(dados_AML, aes(day, New_deaths))
 obitos+ 
   geom_bar(stat="identity", fill = '#f70a0a')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
-  ggtitle('Número de óbitos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020')+
   ylab("Casos") + xlab("Dia") +
   theme(axis.text.x = element_text(size=8, angle=90),
           axis.text.y = element_text(size=10, angle=0))
