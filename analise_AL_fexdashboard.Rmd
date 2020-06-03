@@ -576,7 +576,7 @@ theme(axis.text.x = element_text(size=18, angle=90),
       axis.title.y = element_text(size=20))
 ``` 
 
-### Incidência por Covid-19, Reública Dominicana, 24 de maio de 2020
+### Incidência por Covid-19, República Dominicana, 24 de maio de 2020
 ```{r,  PREV_RED, fig.width=14, fig.height=8}
 casos_red = ggplot(dados_red, aes(day, New_cases))
 casos_red+ 
@@ -1030,7 +1030,7 @@ theme(axis.text.x = element_text(size=18, angle=90),
       axis.title.y = element_text(size=20))
 ``` 
 
-### Mortalidade por Covid-19, Reública Dominicana, 24 de maio de 2020
+### Mortalidade por Covid-19, República Dominicana, 24 de maio de 2020
 ```{r,  OBT_RED, fig.width=14, fig.height=8}
 obitos_red = ggplot(dados_red, aes(day, New_deaths))
 obitos_red+ 
