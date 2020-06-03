@@ -42,6 +42,7 @@ dados_AML = subset(dados_OMS, dados_OMS$Country == "Argentina"|
                      dados_OMS$Country == "Uruguay" |
                      dados_OMS$Country == "Venezuela (Bolivarian Republic of)")
 
+dados_AML$New_cases = ifelse(dados_AML$New_cases < 0, 0, dados_AML$New_cases)
 dados_AML$New_deaths = ifelse(dados_AML$New_deaths < 0, 0, dados_AML$New_deaths)
 pop = data.frame( cbind(c("Argentina", "Bolivia (Plurinational State of)", "Brazil", 
                           "Chile", "Colombia", "Costa Rica", "Cuba", "El Salvador",
