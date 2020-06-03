@@ -566,7 +566,7 @@ Row{data-height=400}
 ```{r,  PREV_PER, fig.width=14, fig.height=8}
 casos_per = ggplot(dados_per, aes(day, New_cases))
 casos_per+ 
-  geom_bar(stat="identity", fill = '#FFFFFF', color = 'grey')+
+  geom_bar(stat="identity", fill = '#D91023')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
   ylab("Casos") + xlab("Dia")+
 theme_classic()+
@@ -740,7 +740,7 @@ valueBox(obitos_col, color = '#FCD116')
 ### Número de óbitos na Costa Rica (Até 24 de maio de 2020)
 ```{r, OBITOS_COS}
 obitos_cos = sum(dados_cos$New_deaths)
-valueBox(obitos_cos, color = '#FFFFFF')
+valueBox(obitos_cos, color = '#D91023')
 ``` 
 
 Row{data-height=400}
@@ -1004,7 +1004,7 @@ Row{data-height=120}
 ### Número de óbitos no Peru (Até 24 de maio de 2020)
 ```{r, OBITOS_PER}
 obitos_per = sum(dados_per$New_deaths)
-valueBox(obitos_per, color = '#FFFFFF')
+valueBox(obitos_per, color = '#D91023')
 ```
 
 ### Número de óbitos na República Dominicana (Até 24 de maio de 2020)
@@ -1061,7 +1061,7 @@ valueBox(obitos_ven, color = '#FFCC00')
 Row{data-height=400}
 -------------------------------------
 
-### Mortalidade por Covid-19, Unuguai, 24 de maio de 2020
+### Mortalidade por Covid-19, Uruguai, 24 de maio de 2020
 ```{r,  OBT_URU, fig.width=14, fig.height=8}
 obitos_uru = ggplot(dados_uru, aes(day, New_deaths))
 obitos_uru+ 
