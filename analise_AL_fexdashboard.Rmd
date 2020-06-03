@@ -3,13 +3,22 @@ title: "Covid-19 na América Latina"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
-    vertical_layout: fill
+    vertical_layout: scroll
 
   
 ---
 
 ```{r, DADOS, setup, include=FALSE}
+
 library(flexdashboard)
+library(ggplot2)
+library(readxl)
+library(tidyverse)
+library(plotly)
+library(ggmap)
+library(scales)
+
+
 setwd('C:/Users/danie/OneDrive/Documentos/ProEpi/Covid_19_AL/dados_OMS')
 dados_OMS = read.csv('20200524_OMS_globaldata.csv', stringsAsFactors = F)
 dados_AML = subset(dados_OMS, dados_OMS$Country == "Argentina"|
@@ -45,11 +54,42 @@ pop = data.frame( cbind(c("Argentina", "Bolivia (Plurinational State of)", "Braz
 colnames(pop) = c("Country", "Pop")
 
 dados_AML = merge(dados_AML, pop, by = "Country")
+dados_AML$Pop = as.double(dados_AML$Pop)
 dados_AML$day = substring(dados_AML$`ï..Date_reported`, 1, 10)
 dados_AML$day = as.Date(dados_AML$day)
 dados_AML$New_cases = ifelse(dados_AML$New_cases < 0, 0, dados_AML$New_cases)
-dados_AML$tx_inc = round(as.double(dados_AML$Cumulative_cases)/as.double(dados_AML$Pop)*100000, 2)
-dados_AML$tx_obt = round(as.double(dados_AML$Cumulative_deaths)/as.double(dados_AML$Pop)*100000, 2)
+dados_AML$tx_pre = round(as.double(dados_AML$Cumulative_cases)/as.double(dados_AML$Pop)*100000, 2)
+dados_AML$tx_obt = round(as.double(dados_AML$New_deaths)/as.double(dados_AML$Pop)*100000, 2)
+
+aml_obt = data.frame(aggregate(New_deaths ~ day, dados_AML, sum))
+aml_inc = data.frame(aggregate(Cumulative_cases ~ day, dados_AML, sum))
+aml_pop = data.frame(aggregate(Pop ~ day, dados_AML, sum))
+
+aml_tot1 = merge(aml_inc, aml_obt, by= 'day')
+aml_tot2 = merge(aml_tot1, aml_pop, by= 'day')
+aml_tot2$tx_pre = round(aml_tot2$Cumulative_cases/aml_tot2$Pop*100000, 2)
+aml_tot2$tx_obt = round(aml_tot2$New_deaths/aml_tot2$Pop*100000, 2)
+
+dados_arg = subset(dados_AML, dados_AML$Country == "Argentina")
+dados_bol = subset(dados_AML, dados_AML$Country == "Bolivia (Plurinational State of)")
+dados_bra = subset(dados_AML, dados_AML$Country == "Brazil")
+dados_chi = subset(dados_AML, dados_AML$Country == "Chile")
+dados_col = subset(dados_AML, dados_AML$Country == "Colombia")
+dados_cos = subset(dados_AML, dados_AML$Country == "Costa Rica")
+dados_cub = subset(dados_AML, dados_AML$Country == "Cuba")
+dados_els = subset(dados_AML, dados_AML$Country == "El Salvador")
+dados_ecu = subset(dados_AML, dados_AML$Country == "Ecuador")
+dados_gua = subset(dados_AML, dados_AML$Country == "Guatemala")
+dados_hai = subset(dados_AML, dados_AML$Country == "Haiti")
+dados_hon = subset(dados_AML, dados_AML$Country == "Honduras")
+dados_mex = subset(dados_AML, dados_AML$Country == "Mexico")
+dados_nic = subset(dados_AML, dados_AML$Country == "Nicaragua")
+dados_pan = subset(dados_AML, dados_AML$Country == "Panama")
+dados_par = subset(dados_AML, dados_AML$Country == "Paraguay")
+dados_per = subset(dados_AML, dados_AML$Country == "Peru")
+dados_red = subset(dados_AML, dados_AML$Country == "Dominican Republic")
+dados_uru = subset(dados_AML, dados_AML$Country == "Uruguay")
+dados_ven = subset(dados_AML, dados_AML$Country == "Venezuela (Bolivarian Republic of)")
 
 ```
 
@@ -57,56 +97,999 @@ dados_AML$tx_obt = round(as.double(dados_AML$Cumulative_deaths)/as.double(dados_
 
 Dados Gerais {data-icon="fa-globe"}
 =============================
-Row{data-height=50}
+Row{data-height=120}
 -------------------------------------
 
 ### Número de casos na América Latina (Até 24 de maio de 2020)
 ```{r, CASOS}
-library(flexdashboard)
 casos = sum(dados_AML$New_cases)
-valueBox(casos, icon = "fa-user-friends", color = '#3236a8')
+valueBox(casos, icon = "fa-user-friends", color = '#3434eb')
 ```
 
 ### Óbitos na América Latina (Até 24 de maio de 2020)
 ```{r, OBITOS}
 obitos = sum(dados_AML$New_deaths)
-valueBox(obitos, icon = "fa-clock", color = '#a83e32')
+valueBox(obitos, icon = "fa-clock", color = '#ff8c00')
 ``` 
 
 ### Letalidade na América Latina (Até 24 de maio de 2020)
 ```{r, LETALIDADE}
 letalidade = paste0(round(obitos/casos*100, 2), "%")
-valueBox(letalidade,icon = "fa-exclamation", color = '#db1620')
+valueBox(letalidade,icon = "fa-exclamation", color = '#ff0000')
 ```  
 
 
-
-Row{data-height=full}
+Row{data-height=400}
 -------------------------------------
 
 ### Número de casos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020
-```{r, CASOS_GRA}
-library(ggplot2)
-library(scales)
-
+```{r, CASOS_GRA, fig.width=14, fig.height=8}
 #histograma de casos 
 casos = ggplot(dados_AML, aes(day, New_cases))
 casos+ 
   geom_bar(stat="identity", fill = '#3434eb')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
   ylab("Casos") + xlab("Dia")+
-theme(axis.text.x = element_text(size=8, angle=90),
-          axis.text.y = element_text(size=10, angle=0))
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
 ```
 
 ### Número de óbitos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020
-```{r, OBITOS_GRA}
+```{r, OBITOS_GRA, fig.width=14, fig.height=8}
 #histograma de Óbitos
 obitos = ggplot(dados_AML, aes(day, New_deaths))
 obitos+ 
-  geom_bar(stat="identity", fill = '#f70a0a')+
+  geom_bar(stat="identity", fill = '#ff0000')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
   ylab("Casos") + xlab("Dia") +
-  theme(axis.text.x = element_text(size=8, angle=90),
-          axis.text.y = element_text(size=10, angle=0))
+  theme(axis.text.x = element_text(size=18, angle=90),
+        axis.text.y = element_text(size=18, angle=0),
+        axis.title.x = element_text(size=20),
+        axis.title.y = element_text(size=20)
+        )
+
 ```
+
+Row{data-height=400}
+-------------------------------------
+
+### Coeficiente de prevalênciapor Covid-19, América Latina, 24 de maio de 2020
+```{r, TXINC_GRA, fig.width=14, fig.height=8}
+aml_inc = ggplot(aml_tot2, aes(day, tx_pre))
+aml_inc+
+  geom_line(color = '#3434eb', size = 2)+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Coeficiente de prevalência(100.000 habitantes)") + xlab("Dia") +
+  theme(axis.text.x = element_text(size=18, angle=90),
+        axis.text.y = element_text(size=18, angle=0),
+        axis.title.x = element_text(size=20),
+        axis.title.y = element_text(size=20))
+```
+
+### Taxa de mortalidade por Covid-19, América Latina, 24 de maio de 2020
+```{r, TXMOR_GRA, fig.width=14, fig.height=8}
+aml_inc = ggplot(aml_tot2, aes(day, tx_obt))
+aml_inc+
+  geom_line(color = '#ff0000', size = 2)+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Taxa de mortalidade (100.000 habitantes)") + xlab("Dia") +
+  theme(axis.text.x = element_text(size=18, angle=90),
+        axis.text.y = element_text(size=18, angle=0),
+        axis.title.x = element_text(size=20),
+        axis.title.y = element_text(size=20))
+```
+
+
+Incidência {data-icon="fa-user-friends"}
+=============================
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos na Argentina (Até 24 de maio de 2020)
+```{r, CASOS_ARG}
+casos_arg = sum(dados_arg$New_cases)
+valueBox(casos_arg, color = '#FCBF49')
+```
+
+### Número de casos na Bolívia (Até 24 de maio de 2020)
+```{r, CASOS_BOL}
+casos_bol = sum(dados_bol$New_cases)
+valueBox(casos_bol, color = '#D52B1E')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, Argentina, 24 de maio de 2020
+```{r, PREV_ARG, fig.width=14, fig.height=8}
+casos_arg = ggplot(dados_arg, aes(day, New_cases))
+casos_arg+ 
+  geom_bar(stat="identity", fill = '#75AADB')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+  theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, Bolívia, 24 de maio de 2020
+```{r, PREV_BOL, fig.width=14, fig.height=8}
+casos_bol = ggplot(dados_bol, aes(day, New_cases))
+casos_bol+ 
+  geom_bar(stat="identity", fill = '#FCD116')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+    theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos no Brasil (Até 24 de maio de 2020)
+```{r, CASOS_BRA}
+casos_bra = sum(dados_bra$New_cases)
+valueBox(casos_bra, color = '#002776')
+```
+
+### Número de casos no Chile (Até 24 de maio de 2020)
+```{r, CASOS_CHI}
+casos_chi = sum(dados_chi$New_cases)
+valueBox(casos_chi, color = '#0039A6')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, Brasil, 24 de maio de 2020
+```{r,  PREV_BRA, fig.width=14, fig.height=8}
+casos_bra = ggplot(dados_bra, aes(day, New_cases))
+casos_bra+ 
+  geom_bar(stat="identity", fill = '#009c3b')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, Chile, 24 de maio de 2020
+```{r,  PREV_CHI, fig.width=14, fig.height=8}
+casos_chi = ggplot(dados_chi, aes(day, New_cases))
+casos_chi+ 
+  geom_bar(stat="identity", fill = '#d52b1e')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos na Colombia (Até 24 de maio de 2020)
+```{r, CASOS_COL}
+casos_col = sum(dados_col$New_cases)
+valueBox(casos_col, color = '#FCD116')
+```
+
+### Número de casos na Costa Rica (Até 24 de maio de 2020)
+```{r, CASOS_COS}
+casos_cos = sum(dados_cos$New_cases)
+valueBox(casos_cos, color = '#002B7F')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, Colombia, 24 de maio de 2020
+```{r,  PREV_COL, fig.width=14, fig.height=8}
+casos_col = ggplot(dados_col, aes(day, New_cases))
+casos_col+ 
+  geom_bar(stat="identity", fill = '#003893')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, Costa Rica, 24 de maio de 2020
+```{r,  PREV_COS, fig.width=14, fig.height=8}
+casos_cos = ggplot(dados_cos, aes(day, New_cases))
+casos_cos+ 
+  geom_bar(stat="identity", fill = '#CE1126')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos em Cuba (Até 24 de maio de 2020)
+```{r, CASOS_CUB}
+casos_cub = sum(dados_cub$New_cases)
+valueBox(casos_cub, color = '#CF142B')
+```
+
+### Número de casos em El Salvador (Até 24 de maio de 2020)
+```{r, CASOS_ELS}
+casos_els = sum(dados_els$New_cases)
+valueBox(casos_els, color = '#0F47AF')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, Cuba, 24 de maio de 2020
+```{r,  PREV_CUB, fig.width=14, fig.height=8}
+casos_cub = ggplot(dados_cub, aes(day, New_cases))
+casos_cub+ 
+  geom_bar(stat="identity", fill = '#002A8F')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, El Salvador, 24 de maio de 2020
+```{r,  PREV_ELS, fig.width=14, fig.height=8}
+casos_els = ggplot(dados_els, aes(day, New_cases))
+casos_els+ 
+  geom_bar(stat="identity", fill = '#1E5B19')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos no Equador (Até 24 de maio de 2020)
+```{r, CASOS_ECU}
+casos_ecu = sum(dados_ecu$New_cases)
+valueBox(casos_ecu, color = '#034EA2')
+```
+
+### Número de casos na Guatemala (Até 24 de maio de 2020)
+```{r, CASOS_GUA}
+casos_gua = sum(dados_gua$New_cases)
+valueBox(casos_gua, color = '#448127')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, Equador, 24 de maio de 2020
+```{r,  PREV_ECU, fig.width=14, fig.height=8}
+casos_ecu = ggplot(dados_ecu, aes(day, New_cases))
+casos_ecu+ 
+  geom_bar(stat="identity", fill = '#FFDD00')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, Guatemala, 24 de maio de 2020
+```{r,  PREV_GUA, fig.width=14, fig.height=8}
+casos_gua = ggplot(dados_gua, aes(day, New_cases))
+casos_gua+ 
+  geom_bar(stat="identity", fill = '#4997D0')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos no Haiti (Até 24 de maio de 2020)
+```{r, CASOS_HAI}
+casos_hai = sum(dados_hai$New_cases)
+valueBox(casos_hai, color = '#00209F')
+```
+
+### Número de casos em Honduras (Até 24 de maio de 2020)
+```{r, CASOS_HON}
+casos_hon = sum(dados_hon$New_cases)
+valueBox(casos_hon, color = '#0073CF')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, Haiti, 24 de maio de 2020
+```{r,  PREV_HAI, fig.width=14, fig.height=8}
+casos_hai = ggplot(dados_hai, aes(day, New_cases))
+casos_hai+ 
+  geom_bar(stat="identity", fill = '#D21034')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, Honduras, 24 de maio de 2020
+```{r,  PREV_HON, fig.width=14, fig.height=8}
+casos_hon = ggplot(dados_hon, aes(day, New_cases))
+casos_hon+ 
+  geom_bar(stat="identity", fill = '#0073CF')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos no México (Até 24 de maio de 2020)
+```{r, CASOS_MEX}
+casos_mex = sum(dados_mex$New_cases)
+valueBox(casos_mex, color = '#CE1126')
+```
+
+### Número de casos em Nicarágua (Até 24 de maio de 2020)
+```{r, CASOS_NIC}
+casos_nic = sum(dados_nic$New_cases)
+valueBox(casos_nic, color = '#0067C6')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, México, 24 de maio de 2020
+```{r,  PREV_MEX, fig.width=14, fig.height=8}
+casos_mex = ggplot(dados_mex, aes(day, New_cases))
+casos_mex+ 
+  geom_bar(stat="identity", fill = '#006341')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, Nicarágua, 24 de maio de 2020
+```{r,  PREV_NIC, fig.width=14, fig.height=8}
+casos_nic = ggplot(dados_nic, aes(day, New_cases))
+casos_nic+ 
+  geom_bar(stat="identity", fill = '#6FD8F3')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos no Panamá (Até 24 de maio de 2020)
+```{r, CASOS_PAN}
+casos_pan = sum(dados_pan$New_cases)
+valueBox(casos_pan, color = '#005293')
+```
+
+### Número de casos no Paraguai (Até 24 de maio de 2020)
+```{r, CASOS_PAR}
+casos_par = sum(dados_par$New_cases)
+valueBox(casos_par, color = '#0038A8')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, Panamá, 24 de maio de 2020
+```{r,  PREV_PAN, fig.width=14, fig.height=8}
+casos_pan = ggplot(dados_pan, aes(day, New_cases))
+casos_pan+ 
+  geom_bar(stat="identity", fill = '#D21034')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, Paraguai, 24 de maio de 2020
+```{r,  PREV_PAR, fig.width=14, fig.height=8}
+casos_pan = ggplot(dados_pan, aes(day, New_cases))
+casos_pan+ 
+  geom_bar(stat="identity", fill = '#D52B1E')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+```
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos no Peru (Até 24 de maio de 2020)
+```{r, CASOS_PER}
+casos_per = sum(dados_per$New_cases)
+valueBox(casos_per, color = '#D91023')
+```
+
+### Número de casos na República Dominicana (Até 24 de maio de 2020)
+```{r, CASOS_RED}
+casos_red = sum(dados_red$New_cases)
+valueBox(casos_red, color = '#CE1126')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, Peru, 24 de maio de 2020
+```{r,  PREV_PER, fig.width=14, fig.height=8}
+casos_per = ggplot(dados_per, aes(day, New_cases))
+casos_per+ 
+  geom_bar(stat="identity", fill = '#FFFFFF', color = 'grey')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, Reública Dominicana, 24 de maio de 2020
+```{r,  PREV_RED, fig.width=14, fig.height=8}
+casos_red = ggplot(dados_red, aes(day, New_cases))
+casos_red+ 
+  geom_bar(stat="identity", fill = '#002D62')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+```
+
+Row{data-height=120}
+-------------------------------------
+### Número de casos no Uruguai (Até 24 de maio de 2020)
+```{r, CASOS_URU}
+casos_uru = sum(dados_uru$New_cases)
+valueBox(casos_uru, color = '#FCD116')
+```
+
+### Número de casos na Venezuela (Até 24 de maio de 2020)
+```{r, CASOS_VEN}
+casos_ven = sum(dados_ven$New_cases)
+valueBox(casos_ven, color = '#FFCC00')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Incidência por Covid-19, Uruguai, 24 de maio de 2020
+```{r,  PREV_URU, fig.width=14, fig.height=8}
+casos_uru = ggplot(dados_uru, aes(day, New_cases))
+casos_uru+ 
+  geom_bar(stat="identity", fill = '#0038A8')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Incidência por Covid-19, Venezuela, 24 de maio de 2020
+```{r,  PREV_VEN, fig.width=14, fig.height=8}
+casos_ven = ggplot(dados_ven, aes(day, New_cases))
+casos_ven+ 
+  geom_bar(stat="identity", fill = '#00247D')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Casos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+```
+
+
+Mortalidadde {data-icon="fa-clock"}
+=============================
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos na Argentina (Até 24 de maio de 2020)
+```{r, OBITOS_ARG}
+obitos_arg = sum(dados_arg$New_deaths)
+valueBox(obitos_arg, color = '#FCBF49')
+```
+
+### Número de óbitos na Bolívia (Até 24 de maio de 2020)
+```{r, OBITOS_BOL}
+obitos_bol = sum(dados_bol$New_deaths)
+valueBox(obitos_bol, color = '#D52B1E')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, Argentina, 24 de maio de 2020
+```{r, OBT_ARG, fig.width=14, fig.height=8}
+obitos_arg = ggplot(dados_arg, aes(day, New_deaths))
+obitos_arg+ 
+  geom_bar(stat="identity", fill = '#75AADB')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+  theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, Bolívia, 24 de maio de 2020
+```{r, OBT_BOL, fig.width=14, fig.height=8}
+obitos_bol = ggplot(dados_bol, aes(day, New_deaths))
+obitos_bol+ 
+  geom_bar(stat="identity", fill = '#FCD116')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+    theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos no Brasil (Até 24 de maio de 2020)
+```{r, OBITOS_BRA}
+obitos_bra = sum(dados_bra$New_deaths)
+valueBox(obitos_bra, color = '#002776')
+```
+
+### Número de óbitos no Chile (Até 24 de maio de 2020)
+```{r, OBITOS_CHI}
+obitos_chi = sum(dados_chi$New_deaths)
+valueBox(obitos_chi, color = '#0039A6')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, Brasil, 24 de maio de 2020
+```{r,  OBT_BRA, fig.width=14, fig.height=8}
+obitos_bra = ggplot(dados_bra, aes(day, New_deaths))
+obitos_bra+ 
+  geom_bar(stat="identity", fill = '#009c3b')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, Chile, 24 de maio de 2020
+```{r,  OBT_CHI, fig.width=14, fig.height=8}
+obitos_chi = ggplot(dados_chi, aes(day, New_deaths))
+obitos_chi+ 
+  geom_bar(stat="identity", fill = '#d52b1e')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos na Colombia (Até 24 de maio de 2020)
+```{r, OBITOS_COL}
+obitos_col = sum(dados_col$New_deaths)
+valueBox(obitos_col, color = '#FCD116')
+```
+
+### Número de óbitos na Costa Rica (Até 24 de maio de 2020)
+```{r, OBITOS_COS}
+obitos_cos = sum(dados_cos$New_deaths)
+valueBox(obitos_cos, color = '#FFFFFF')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, Colombia, 24 de maio de 2020
+```{r,  OBT_COL, fig.width=14, fig.height=8}
+obitos_col = ggplot(dados_col, aes(day, New_deaths))
+obitos_col+ 
+  geom_bar(stat="identity", fill = '#003893')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, Costa Rica, 24 de maio de 2020
+```{r,  OBT_COS, fig.width=14, fig.height=8}
+obitos_cos = ggplot(dados_cos, aes(day, New_deaths))
+obitos_cos+ 
+  geom_bar(stat="identity", fill = '#CE1126')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos em Cuba (Até 24 de maio de 2020)
+```{r, OBITOS_CUB}
+obitos_cub = sum(dados_cub$New_deaths)
+valueBox(obitos_cub, color = '#CF142B')
+```
+
+### Número de óbitos em El Salvador (Até 24 de maio de 2020)
+```{r, OBITOS_ELS}
+obitos_els = sum(dados_els$New_deaths)
+valueBox(obitos_els, color = '#0F47AF')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, Cuba, 24 de maio de 2020
+```{r,  OBT_CUB, fig.width=14, fig.height=8}
+obitos_cub = ggplot(dados_cub, aes(day, New_deaths))
+obitos_cub+ 
+  geom_bar(stat="identity", fill = '#002A8F')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, El Salvador, 24 de maio de 2020
+```{r,  OBT_ELS, fig.width=14, fig.height=8}
+obitos_els = ggplot(dados_els, aes(day, New_deaths))
+obitos_els+ 
+  geom_bar(stat="identity", fill = '#1E5B19')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos no Equador (Até 24 de maio de 2020)
+```{r, OBITOS_ECU}
+obitos_ecu = sum(dados_ecu$New_deaths)
+valueBox(obitos_ecu, color = '#034EA2')
+```
+
+### Número de óbitos na Guatemala (Até 24 de maio de 2020)
+```{r, OBITOS_GUA}
+obitos_gua = sum(dados_gua$New_deaths)
+valueBox(obitos_gua, color = '#448127')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, Equador, 24 de maio de 2020
+```{r,  OBT_ECU, fig.width=14, fig.height=8}
+obitos_ecu = ggplot(dados_ecu, aes(day, New_deaths))
+obitos_ecu+ 
+  geom_bar(stat="identity", fill = '#FFDD00')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, Guatemala, 24 de maio de 2020
+```{r,  OBT_GUA, fig.width=14, fig.height=8}
+obitos_gua = ggplot(dados_gua, aes(day, New_deaths))
+obitos_gua+ 
+  geom_bar(stat="identity", fill = '#4997D0')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos no Haiti (Até 24 de maio de 2020)
+```{r, OBITOS_HAI}
+obitos_hai = sum(dados_hai$New_deaths)
+valueBox(obitos_hai, color = '#00209F')
+```
+
+### Número de óbitos em Honduras (Até 24 de maio de 2020)
+```{r, OBITOS_HON}
+obitos_hon = sum(dados_hon$New_deaths)
+valueBox(obitos_hon, color = '#0073CF')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, Haiti, 24 de maio de 2020
+```{r,  OBT_HAI, fig.width=14, fig.height=8}
+obitos_hai = ggplot(dados_hai, aes(day, New_deaths))
+obitos_hai+ 
+  geom_bar(stat="identity", fill = '#D21034')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, Honduras, 24 de maio de 2020
+```{r,  OBT_HON, fig.width=14, fig.height=8}
+obitos_hon = ggplot(dados_hon, aes(day, New_deaths))
+obitos_hon+ 
+  geom_bar(stat="identity", fill = '#0073CF')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos no México (Até 24 de maio de 2020)
+```{r, OBITOS_MEX}
+obitos_mex = sum(dados_mex$New_deaths)
+valueBox(obitos_mex, color = '#CE1126')
+```
+
+### Número de óbitos em Nicarágua (Até 24 de maio de 2020)
+```{r, OBITOS_NIC}
+obitos_nic = sum(dados_nic$New_deaths)
+valueBox(obitos_nic, color = '#0067C6')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, México, 24 de maio de 2020
+```{r,  OBT_MEX, fig.width=14, fig.height=8}
+obitos_mex = ggplot(dados_mex, aes(day, New_deaths))
+obitos_mex+ 
+  geom_bar(stat="identity", fill = '#006341')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, Nicarágua, 24 de maio de 2020
+```{r,  OBT_NIC, fig.width=14, fig.height=8}
+obitos_nic = ggplot(dados_nic, aes(day, New_deaths))
+obitos_nic+ 
+  geom_bar(stat="identity", fill = '#6FD8F3')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos no Panamá (Até 24 de maio de 2020)
+```{r, OBITOS_PAN}
+obitos_pan = sum(dados_pan$New_deaths)
+valueBox(obitos_pan, color = '#005293')
+```
+
+### Número de óbitos no Paraguai (Até 24 de maio de 2020)
+```{r, OBITOS_PAR}
+obitos_par = sum(dados_par$New_deaths)
+valueBox(obitos_par, color = '#0038A8')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, Panamá, 24 de maio de 2020
+```{r,  OBT_PAN, fig.width=14, fig.height=8}
+obitos_pan = ggplot(dados_pan, aes(day, New_deaths))
+obitos_pan+ 
+  geom_bar(stat="identity", fill = '#D21034')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, Paraguai, 24 de maio de 2020
+```{r,  OBT_PAR, fig.width=14, fig.height=8}
+obitos_pan = ggplot(dados_pan, aes(day, New_deaths))
+obitos_pan+ 
+  geom_bar(stat="identity", fill = '#D52B1E')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+```
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos no Peru (Até 24 de maio de 2020)
+```{r, OBITOS_PER}
+obitos_per = sum(dados_per$New_deaths)
+valueBox(obitos_per, color = '#FFFFFF')
+```
+
+### Número de óbitos na República Dominicana (Até 24 de maio de 2020)
+```{r, OBITOS_RED}
+obitos_red = sum(dados_red$New_deaths)
+valueBox(obitos_red, color = '#CE1126')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, Peru, 24 de maio de 2020
+```{r,  OBT_PER, fig.width=14, fig.height=8}
+obitos_per = ggplot(dados_per, aes(day, New_deaths))
+obitos_per+ 
+  geom_bar(stat="identity", fill = '#D91023')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, Reública Dominicana, 24 de maio de 2020
+```{r,  OBT_RED, fig.width=14, fig.height=8}
+obitos_red = ggplot(dados_red, aes(day, New_deaths))
+obitos_red+ 
+  geom_bar(stat="identity", fill = '#002D62')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+```
+
+Row{data-height=120}
+-------------------------------------
+### Número de óbitos no Uruguai (Até 24 de maio de 2020)
+```{r, OBITOS_URU}
+obitos_uru = sum(dados_uru$New_deaths)
+valueBox(obitos_uru, color = '#FCD116')
+```
+
+### Número de óbitos na Venezuela (Até 24 de maio de 2020)
+```{r, OBITOS_VEN}
+obitos_ven = sum(dados_ven$New_deaths)
+valueBox(obitos_ven, color = '#FFCC00')
+``` 
+
+Row{data-height=400}
+-------------------------------------
+
+### Mortalidade por Covid-19, Unuguai, 24 de maio de 2020
+```{r,  OBT_URU, fig.width=14, fig.height=8}
+obitos_uru = ggplot(dados_uru, aes(day, New_deaths))
+obitos_uru+ 
+  geom_bar(stat="identity", fill = '#0038A8')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+``` 
+
+### Mortalidade por Covid-19, Venezuela, 24 de maio de 2020
+```{r,  OBT_VEN, fig.width=14, fig.height=8}
+obitos_ven = ggplot(dados_ven, aes(day, New_deaths))
+obitos_ven+ 
+  geom_bar(stat="identity", fill = '#00247D')+
+  scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
+  ylab("Óbitos") + xlab("Dia")+
+theme_classic()+
+theme(axis.text.x = element_text(size=18, angle=90),
+      axis.text.y = element_text(size=18, angle=0),
+      axis.title.x = element_text(size=20),
+      axis.title.y = element_text(size=20))
+```
+
+
+Prevalência e letalidade {data-icon="fa-exclamation"}
+=============================
+
