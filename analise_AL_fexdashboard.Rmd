@@ -42,7 +42,12 @@ pop = data.frame( cbind(c("Argentina", "Bolivia (Plurinational State of)", "Braz
                     4034119, 7152703, 33105273, 10630000, 3351016, 31703499)))
 colnames(pop) = c("Country", "Pop")
 
-
+dados_AML = merge(dados_AML, pop, by = "Country")
+dados_AML$day = substring(dados_AML$`ï..Date_reported`, 1, 10)
+dados_AML$day = as.Date(dados_AML$day)
+dados_AML$New_cases = ifelse(dados_AML$New_cases < 0, 0, dados_AML$New_cases)
+dados_AML$tx_inc = round(as.double(dados_AML$Cumulative_cases)/as.double(dados_AML$Pop)*100000, 2)
+dados_AML$tx_obt = round(as.double(dados_AML$Cumulative_deaths)/as.double(dados_AML$Pop)*100000, 2)
 ```
 
 Row 
@@ -86,8 +91,9 @@ casos+
   geom_bar(stat="identity", fill = '#3434eb')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
   ggtitle('Número de casos confirmados de Covid-19 por dia, América Latina, 24 de maio de 2020')+
-  ylab("Casos") + xlab("Dia") +
-  theme_bw() 
+  ylab("Casos") + xlab("Dia")+
+theme(axis.text.x = element_text(size=8, angle=90),
+          axis.text.y = element_text(size=10, angle=0))
 ```
     
 
@@ -113,7 +119,7 @@ Row
 #gráfico de linhas da taxa de incidência
 tx_inc = ggplot(dados_AML, aes(day, tx_inc))
 tx_inc+
-  geom_line(color = '#28b4c9', size = 1.5)+
+  geom_line(color = '#3434eb', size = 1.5)+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
   ggtitle('Taxa de incidência acumulada por Covid-19, América Latina, 24 de maio de 2020')+
   ylab("Taxa de incidência") + xlab("Dia") +
