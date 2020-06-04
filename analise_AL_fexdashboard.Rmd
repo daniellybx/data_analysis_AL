@@ -2,11 +2,20 @@
 title: "Covid-19 na América Latina"
 output: 
   flexdashboard::flex_dashboard:
+    logo: https://proepi.org.br/wp-content/uploads/2019/02/vetor-proepi-branco-c.png
     orientation: rows
     vertical_layout: scroll
 
-  
 ---
+<style>                     
+.navbar {
+  background-color:#4054B2;
+  border-color:#FFFFFF;
+}
+.navbar-brand {
+color:#FFFFFF!important;
+}
+</style>  
 
 ```{r, DADOS, setup, include=FALSE}
 
