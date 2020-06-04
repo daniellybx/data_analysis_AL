@@ -544,8 +544,8 @@ theme(axis.text.x = element_text(size=18, angle=90),
 
 ### Incidência por Covid-19, Paraguai, 03 de junho de 2020
 ```{r,  PREV_PAR, fig.width=14, fig.height=8}
-casos_pan = ggplot(dados_pan, aes(day, New_cases))
-casos_pan+ 
+casos_par = ggplot(dados_par, aes(day, New_cases))
+casos_par+ 
   geom_bar(stat="identity", fill = '#D52B1E')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
   ylab("Casos") + xlab("Dia")+
@@ -998,8 +998,8 @@ theme(axis.text.x = element_text(size=18, angle=90),
 
 ### Mortalidade por Covid-19, Paraguai, 03 de junho de 2020
 ```{r,  OBT_PAR, fig.width=14, fig.height=8}
-obitos_pan = ggplot(dados_pan, aes(day, New_deaths))
-obitos_pan+ 
+obitos_par = ggplot(dados_par, aes(day, New_deaths))
+obitos_par+ 
   geom_bar(stat="identity", fill = '#D52B1E')+
   scale_x_date(breaks="5 days", labels=date_format("%d/%m"))+
   ylab("Óbitos") + xlab("Dia")+
